@@ -1,3 +1,11 @@
+"""
+neural_net.py
+worked on by: Yasmin Veys
+
+Run neural_net.py <training_file_input> 
+EX: python3 neural_net.py Meena_5_16_89475.txt
+"""
+
 import numpy as np
 import sys
 import keras.backend as K
@@ -9,6 +17,11 @@ from io_help import *
 from solver import *
 
 def neural_net_heuristic(board, model):
+
+	"""
+	This function takes in a board and a trained NN model and returns
+	the heuristic the model predicts.
+	"""
 
 	return model.predict(one_hot_encode(board).reshape(1,256))
 
