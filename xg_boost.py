@@ -1,16 +1,15 @@
 """
-neural_net.py
+xg_boost.py
 worked on by: Yasmin Veys
 
-Run neural_net.py <training_file_input> 
-EX: python3 neural_net.py Meena_5_16_89475.txt
+Run xg_boost.py <training_file_input> 
+EX: python3 xg_boost.py Meena_5_16_89475.txt
 """
-
 import numpy as np
 import sys
-import keras.backend as K
-from keras.models import Sequential
-from keras.layers import Dense, Dropout, Conv2D, Flatten
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
+import xgboost as xgb
+from xgboost import XGBClassifier
 from sklearn.model_selection import KFold
 from sklearn.model_selection import cross_val_score
 
@@ -19,7 +18,7 @@ from heuristic import *
 from io_help import *
 from solver import *
 
-def neural_net_heuristic(board, model):
+def xgboost_heuristic(board, model):
 
 	"""
 	This function takes in a board and a trained NN model and returns
@@ -75,80 +74,39 @@ def load_data(file_name):
 def evaluate(file_name):
 	"""
 	This function reads in training data from a file and 
-	trains and evaluates NN model using kfold validation. 
+	trains and evaluates an xgboost model using kfold validation. 
 	"""
 	(X,Y) = load_data(file_name)
 
 	# Implement K-fold cross validation
 	kfold = KFold(n_splits=10, shuffle=True, random_state=2020)
 
-	for train, test in kfold.split(X, Y):
-		# Build Model
-		model = Sequential()
+	# Build Model, Look at the link below for parameter options
+	# https://xgboost.readthedocs.io/en/latest/python/python_api.html
+	model = XGBClassifier(learning_rate=0.08, max_depth=3, min_child_weight=2, 
+		n_estimators=110, nthread=4, objective='reg:logistic', subsample=1, verbosity=0)
 
-		# Input Layer
-		model.add(Dense(units=256, input_dim=256, activation='relu'))
-		model.add(Dropout(0.1))
-		# Hidden Layers
-		model.add(Dense(units=256, activation='relu'))
-		# Output Layer
-		model.add(Dense(units=1, activation='linear'))
-
-		# Define the optimizer and loss function
-		model.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
-
-		# You can also define a custom loss function
-		# model.compile(optimizer='adam', loss=custom_loss)
-
-		# Train 
-		model.fit(X[train], Y[train], epochs=20)
-
-		# Evaluate
-		score = model.evaluate(X[test], Y[test], verbose=0)
-		print(score)
+	score = cross_val_score(model, X, Y, cv=kfold)
+	print(score.mean()*100)
 
 	return model
 
 def train(file_name):
 	"""
 	This function reads in training data from a file and returns a 
-	trained NN model. 
+	trained xgboost model. 
 	"""
 	(X,Y) = load_data(file_name)
 
-	# Build Model
-	model = Sequential()
-
-	# Input Layer
-	model.add(Dense(units=256, input_dim=256, activation='relu'))
-	model.add(Dropout(0.1))
-	# Hidden Layers
-	model.add(Dense(units=256, activation='relu'))
-	# Output Layer
-	model.add(Dense(units=1, activation='linear'))
-
-	# Define the optimizer and loss function
-	model.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
-
-	# You can also define a custom loss function
-	# model.compile(optimizer='adam', loss=custom_loss)
+	# Build Model, Look at the link below for parameter options
+	# https://xgboost.readthedocs.io/en/latest/python/python_api.html
+	model = XGBClassifier(learning_rate=0.08, max_depth=3, min_child_weight=2, 
+		n_estimators=110, nthread=4, objective='reg:logistic', subsample=1, verbosity=2)
 
 	# Train 
-	model.fit(X, Y, epochs=20)
+	model.fit(X, Y)
 
 	return model
-
-def custom_loss(y_true, y_pred): 
-	"""
-	This custom loss function takes in y_true and y_pred and returns
-	the loss. It cannot take more than two arguments.
-	"""
-
-	# Slighly different verson of mse, for example 
-	loss = K.square((y_pred - y_true)/10)
-	loss = K.mean(loss, axis=1)
-
-	return loss
 
 if __name__ == "__main__":
 
@@ -160,7 +118,7 @@ if __name__ == "__main__":
 
 	# Toy Example Testing 
 	# To train on the entire data set, replace evaluate with train
-	model = evaluate(file_name)
+	model = train(file_name)
 	board = gen_board()
-	print(neural_net_heuristic(board, model))
+	print(xgboost_heuristic(board, model))
 	print(manhattan(board))
