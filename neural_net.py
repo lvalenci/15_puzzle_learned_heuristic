@@ -11,6 +11,8 @@ import sys
 import keras.backend as K
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Conv2D, Flatten
+from sklearn.model_selection import KFold
+
 from constants import * 
 from heuristic import *
 from io_help import *
@@ -54,38 +56,51 @@ def train(file_name):
 	This function reads in training data from a file and returns a 
 	trained NN model. 
 	"""
+	np.random.seed(2020)
+
 	file = open(file_name, "r")
 
-	train_X = []
-	train_Y = []
+	X = []
+	Y = []
 
 	for string in file: 
 		(board, dist) = string_to_board_and_dist(string) 
 
-		train_X.append(one_hot_encode(board))
-		train_Y.append(dist)
+		X.append(one_hot_encode(board))
+		Y.append(dist)
 
 	file.close()
 
-	# Build Model
-	model = Sequential()
+	X = np.asarray(X)
+	Y = np.asarray(Y)
 
-	# Input Layer
-	model.add(Dense(units=100, input_dim=256, activation='relu'))
-	model.add(Dropout(0.1))
-	# Hidden Layers
-	model.add(Dense(units=100, activation='relu'))
-	# Output Layer
-	model.add(Dense(units=1, activation='linear'))
+	# Implement K-fold cross validation
+	kfold = KFold(n_splits=10, shuffle=True, random_state=2020)
 
-	# Define the optimizer and loss function
-	model.compile(optimizer='adam', loss='mse')
+	for train, test in kfold.split(X, Y):
+		# Build Model
+		model = Sequential()
 
-	# You can also define a custom loss function
-	# model.compile(optimizer='adam', loss=custom_loss)
+		# Input Layer
+		model.add(Dense(units=256, input_dim=256, activation='relu'))
+		model.add(Dropout(0.1))
+		# Hidden Layers
+		model.add(Dense(units=256, activation='relu'))
+		# Output Layer
+		model.add(Dense(units=1, activation='linear'))
 
-	# Train 
-	model.fit(np.array(train_X), np.array(train_Y), epochs=100)
+		# Define the optimizer and loss function
+		model.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
+
+		# You can also define a custom loss function
+		# model.compile(optimizer='adam', loss=custom_loss)
+
+		# Train 
+		model.fit(X[train], Y[train], epochs=20)
+
+		# Evaluate
+		score = model.evaluate(X[test], Y[test], verbose=0)
+		print(score)
 
 	return model
 
