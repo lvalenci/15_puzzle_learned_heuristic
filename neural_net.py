@@ -51,7 +51,7 @@ def one_hot_encode(board):
 
 	return X
 
-def train(file_name):
+def evaluate(file_name):
 	"""
 	This function reads in training data from a file and returns a 
 	trained NN model. 
@@ -103,6 +103,52 @@ def train(file_name):
 		print(score)
 
 	return model
+
+def train(file_name):
+	"""
+	This function reads in training data from a file and returns a 
+	trained NN model. 
+	"""
+	np.random.seed(2020)
+
+	file = open(file_name, "r")
+
+	X = []
+	Y = []
+
+	for string in file: 
+		(board, dist) = string_to_board_and_dist(string) 
+
+		X.append(one_hot_encode(board))
+		Y.append(dist)
+
+	file.close()
+
+	X = np.asarray(X)
+	Y = np.asarray(Y)
+
+	# Build Model
+	model = Sequential()
+
+	# Input Layer
+	model.add(Dense(units=256, input_dim=256, activation='relu'))
+	model.add(Dropout(0.1))
+	# Hidden Layers
+	model.add(Dense(units=256, activation='relu'))
+	# Output Layer
+	model.add(Dense(units=1, activation='linear'))
+
+	# Define the optimizer and loss function
+	model.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
+
+	# You can also define a custom loss function
+	# model.compile(optimizer='adam', loss=custom_loss)
+
+	# Train 
+	model.fit(X, Y, epochs=20)
+
+	return model
+
 
 def custom_loss(y_true, y_pred): 
 	"""
