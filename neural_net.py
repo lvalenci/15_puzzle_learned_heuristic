@@ -51,10 +51,10 @@ def one_hot_encode(board):
 
 	return X
 
-def evaluate(file_name):
+def read_data(file_name):
 	"""
-	This function reads in training data from a file and returns a 
-	trained NN model. 
+	This function reads in training data from a file and returns 
+	the one-hot encoded data X and their labels Y as a tuple. 
 	"""
 	np.random.seed(2020)
 
@@ -71,8 +71,15 @@ def evaluate(file_name):
 
 	file.close()
 
-	X = np.asarray(X)
-	Y = np.asarray(Y)
+	return(np.asarray(X),np.asarray(Y))
+
+
+def evaluate(file_name):
+	"""
+	This function reads in training data from a file and returns a 
+	trained NN model. 
+	"""
+	(X,Y) = read_data(file_name)
 
 	# Implement K-fold cross validation
 	kfold = KFold(n_splits=10, shuffle=True, random_state=2020)
@@ -109,23 +116,7 @@ def train(file_name):
 	This function reads in training data from a file and returns a 
 	trained NN model. 
 	"""
-	np.random.seed(2020)
-
-	file = open(file_name, "r")
-
-	X = []
-	Y = []
-
-	for string in file: 
-		(board, dist) = string_to_board_and_dist(string) 
-
-		X.append(one_hot_encode(board))
-		Y.append(dist)
-
-	file.close()
-
-	X = np.asarray(X)
-	Y = np.asarray(Y)
+	(X,Y) = read_data(file_name)
 
 	# Build Model
 	model = Sequential()
