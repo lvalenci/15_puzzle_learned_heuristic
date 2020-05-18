@@ -12,6 +12,7 @@ import keras.backend as K
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Conv2D, Flatten
 from sklearn.model_selection import KFold
+from sklearn.model_selection import cross_val_score
 
 from constants import * 
 from heuristic import *
@@ -56,8 +57,6 @@ def load_data(file_name):
 	This function reads in training data from a file and returns 
 	the one-hot encoded data X and their labels Y as a tuple. 
 	"""
-	np.random.seed(2020)
-
 	file = open(file_name, "r")
 
 	X = []
@@ -160,7 +159,8 @@ if __name__ == "__main__":
 	file_name = sys.argv[1] 
 
 	# Toy Example Testing 
-	model = train(file_name)
+	# To train on the entire data set, replace evaluate with train
+	model = evaluate(file_name)
 	board = gen_board()
 	print(neural_net_heuristic(board, model))
 	print(manhattan(board))
