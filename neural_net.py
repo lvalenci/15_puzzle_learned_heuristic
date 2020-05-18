@@ -73,7 +73,6 @@ def read_data(file_name):
 
 	return(np.asarray(X),np.asarray(Y))
 
-
 def evaluate(file_name):
 	"""
 	This function reads in training data from a file and returns a 
@@ -139,7 +138,6 @@ def train(file_name):
 	model.fit(X, Y, epochs=20)
 
 	return model
-
 
 def custom_loss(y_true, y_pred): 
 	"""
