@@ -1,9 +1,9 @@
 """
 neural_net.py
-worked on by: Yasmin Veys
+worked on by: Yasmin Veys and Luka Valencic
 
 Run neural_net.py <training_file_input> 
-EX: python3 neural_net.py Meena_5_16_89475.txt
+EX: python3 neural_net.py Meena_5_16_89475.txt saved_model.txt
 """
 
 import numpy as np
@@ -13,6 +13,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Conv2D, Flatten
 from sklearn.model_selection import KFold
 from sklearn.model_selection import cross_val_score
+from keras.models import load_model
 
 from constants import * 
 from heuristic import *
@@ -138,6 +139,36 @@ def train(file_name):
 
 	return model
 
+def train_custom_loss(file_name, loss_func):
+	"""
+	This function reads in training data from a file and returns a 
+	trained NN model.  This NN model is trained with specificed loss
+	function
+	"""
+	(X,Y) = load_data(file_name)
+
+	# Build Model
+	model = Sequential()
+
+	# Input Layer
+	model.add(Dense(units=256, input_dim=256, activation='relu'))
+	model.add(Dropout(0.1))
+	# Hidden Layers
+	model.add(Dense(units=256, activation='relu'))
+	# Output Layer
+	model.add(Dense(units=1, activation='linear'))
+
+	# Define the optimizer and loss function
+	model.compile(optimizer='adam', loss=exp_loss, metrics=['accuracy'])
+
+	# You can also define a custom loss function
+	# model.compile(optimizer='adam', loss=custom_loss)
+
+	# Train 
+	model.fit(X, Y, epochs=20)
+
+	return model
+
 def custom_loss(y_true, y_pred): 
 	"""
 	This custom loss function takes in y_true and y_pred and returns
@@ -150,17 +181,39 @@ def custom_loss(y_true, y_pred):
 
 	return loss
 
+def exp_loss(y_true, y_pred):
+	"""
+	Custom loss function. 
+	"""
+	loss = K.exp((y_pred - y_true))
+	loss = loss + K.square((y_pred - y_true) / 2)
+	loss = K.mean(loss, axis = 1)
+
+	return loss
+
+def run_saved_model(model_file, data_file):
+	"""
+	given a file to which a model is saved a a datafile, runs model on data
+	on code to evaluate accuracy and score
+	"""
+	model = load_model(model_file)
+	(X, Y) = load_data(data_file)
+	score = model.evaluate(X, Y, verbose = 0)
+	print(score)
+
 if __name__ == "__main__":
 
-	if not (len(sys.argv) == 2):
-		print("usage error: arg1 = input file name")
+	if not (len(sys.argv) == 3):
+		print("usage error:\n arg1 = input file name \n arg2 = file to save model to")
 		exit()
 
 	file_name = sys.argv[1] 
+	out_file = sys.argv[2]
 
 	# Toy Example Testing 
 	# To train on the entire data set, replace evaluate with train
 	model = evaluate(file_name)
+	model.save(out_file)
 	board = gen_board()
 	print(neural_net_heuristic(board, model))
 	print(manhattan(board))

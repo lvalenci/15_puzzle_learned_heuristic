@@ -3,7 +3,7 @@ xg_boost.py
 worked on by: Yasmin Veys
 
 Run xg_boost.py <training_file_input> 
-EX: python3 xg_boost.py Meena_5_16_89475.txt
+EX: python3 xg_boost.py Meena_5_16_89475.txt saved_model.txt
 """
 import numpy as np
 import sys
@@ -12,6 +12,8 @@ import xgboost as xgb
 from xgboost import XGBClassifier
 from sklearn.model_selection import KFold
 from sklearn.model_selection import cross_val_score
+from sklearn.metrics import accuracy_score
+from sklearn.preprocessing import LabelEncoder
 
 from constants import * 
 from heuristic import *
@@ -108,17 +110,33 @@ def train(file_name):
 
 	return model
 
+def run_saved_model(model_file, data_file):
+	"""
+	given a file to which a model is saved a a datafile, runs model on data
+	on code to evaluate accuracy and score
+	"""
+	model = XGBClassifier();
+	model.load_model(model_file)
+	(X, Y) = load_data(data_file)
+	model._le = LabelEncoder().fit(Y)
+	y_pred = model.predict(X)
+	pred = [round(v) for v in y_pred]
+	acc = accuracy_score(Y, pred)
+	print(acc * 100.0)
+
 if __name__ == "__main__":
 
-	if not (len(sys.argv) == 2):
-		print("usage error: arg1 = input file name")
+	if not (len(sys.argv) == 3):
+		print("usage error: \narg1 = input file name\narg2 = save model file")
 		exit()
 
 	file_name = sys.argv[1] 
+	save_file = sys.argv[2]
 
 	# Toy Example Testing 
 	# To train on the entire data set, replace evaluate with train
 	model = train(file_name)
 	board = gen_board()
+	model.save_model(save_file)
 	print(xgboost_heuristic(board, model))
 	print(manhattan(board))
