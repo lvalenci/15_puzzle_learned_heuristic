@@ -26,8 +26,8 @@ def neural_net_heuristic(board, model):
 	This function takes in a board and a trained NN model and returns
 	the heuristic the model predicts.
 	"""
-
-	return model.predict(one_hot_encode(board).reshape(1,256))
+	[[pred]] = model.predict(one_hot_encode(board).reshape(1,256))
+	return round(pred)
 
 def one_hot_encode(board):
 	""" 
@@ -72,6 +72,30 @@ def load_data(file_name):
 	file.close()
 
 	return(np.asarray(X),np.asarray(Y))
+
+def find_over_estimate(file_name, model_file):
+	"""
+	This function takes in a model saved in model_file and data points in 
+	file_name and prints out the percentage of times said model predicted 
+	a distance greater than the actual distance and the percentage of times
+	said model predicted a distance less than the Manhattan Distance
+	"""
+	model = load_model(model_file)
+	data = open(file_name, "r")
+	over = []
+	under = []
+
+	for line in data:
+		(board, dist) = string_to_board_and_dist(line)
+		man_dist = manhattan(board)
+		pred = neural_net_heuristic(board, model)
+		over.append(pred > dist)
+		under.append(pred < man_dist)
+		print(str(pred) + " prediction " + str(man_dist) + " man dist" + str(dist) + " acutal distance")
+
+	print("prediction less than manhattan percent of the time", sum(under) * 100 / len(under))
+	print("prediction greater than actual distance precent of the time", sum(over) * 100 / len(over))
+
 
 def evaluate(file_name):
 	"""
