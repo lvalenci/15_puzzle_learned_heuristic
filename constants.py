@@ -2,7 +2,7 @@
 SIZE = 4
 
 # number of moves when making random board
-NUM_MOVES = 80
+NUM_MOVES = 100 # 3 * 81 (max distance from solution)
 
 # conversion ration between hous and seconds
 HOUR_TO_SEC = 3600
