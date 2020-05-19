@@ -14,11 +14,40 @@ from keras.layers import Dense, Dropout, Conv2D, Flatten
 from sklearn.model_selection import KFold
 from sklearn.model_selection import cross_val_score
 from keras.models import load_model
+import keras.losses
 
 from constants import * 
 from heuristic import *
 from io_help import *
 from solver import *
+
+
+# Must define all custom loss function here
+def custom_loss(y_true, y_pred): 
+	"""
+	This custom loss function takes in y_true and y_pred and returns
+	the loss. It cannot take more than two arguments.
+	"""
+
+	# Slighly different verson of mse, for example 
+	loss = K.square((y_pred - y_true)/10)
+	loss = K.mean(loss, axis=1)
+
+	return loss
+
+def exp_loss(y_true, y_pred):
+	"""
+	Custom loss function. 
+	"""
+	loss = K.exp((y_pred - y_true))
+	loss = loss + K.square((y_pred - y_true) / 2)
+	loss = K.mean(loss, axis = 1)
+
+	return loss
+
+# define custom loss functions in keras so can load model
+keras.losses.custom_loss = custom_loss
+keras.losses.exp_loss = exp_loss
 
 def neural_net_heuristic(board, model):
 
@@ -91,7 +120,6 @@ def find_over_estimate(file_name, model_file):
 		pred = neural_net_heuristic(board, model)
 		over.append(pred > dist)
 		under.append(pred < man_dist)
-		print(str(pred) + " prediction " + str(man_dist) + " man dist" + str(dist) + " acutal distance")
 
 	print("prediction less than manhattan percent of the time", sum(under) * 100 / len(under))
 	print("prediction greater than actual distance precent of the time", sum(over) * 100 / len(over))
@@ -192,28 +220,6 @@ def train_custom_loss(file_name, loss_func):
 	model.fit(X, Y, epochs=20)
 
 	return model
-
-def custom_loss(y_true, y_pred): 
-	"""
-	This custom loss function takes in y_true and y_pred and returns
-	the loss. It cannot take more than two arguments.
-	"""
-
-	# Slighly different verson of mse, for example 
-	loss = K.square((y_pred - y_true)/10)
-	loss = K.mean(loss, axis=1)
-
-	return loss
-
-def exp_loss(y_true, y_pred):
-	"""
-	Custom loss function. 
-	"""
-	loss = K.exp((y_pred - y_true))
-	loss = loss + K.square((y_pred - y_true) / 2)
-	loss = K.mean(loss, axis = 1)
-
-	return loss
 
 def run_saved_model(model_file, data_file):
 	"""
