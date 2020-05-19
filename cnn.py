@@ -56,14 +56,20 @@ def cnn_heuristic(board, model):
 	the heuristic the model predicts.
 	"""
 	 # transform board into correct shape
+	if is_solved(board):
+		return 0
 	board_size = len(board)
 	X = []
 	X.append(np.asarray(board))
 	X = np.asarray(X)
 	# divide by 16 to get "greyscale" values
 	X = X.reshape(1, board_size, board_size, 1) / 16
+
+	[probs] = model.predict(X)
+
+	pred = np.argmax(probs) + 1
     
-	return model.predict(X)
+	return pred
 
 def find_over_estimate(file_name, model_file):
 	"""
@@ -81,6 +87,7 @@ def find_over_estimate(file_name, model_file):
 		(board, dist) = string_to_board_and_dist(line)
 		man_dist = manhattan(board)
 		pred = cnn_heuristic(board, model)
+		print(pred)
 		over.append(pred > dist)
 		under.append(pred < man_dist)
 
