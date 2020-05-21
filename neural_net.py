@@ -9,8 +9,8 @@ EX: python3 neural_net.py Meena_5_16_89475.txt saved_model.txt
 import numpy as np
 import sys
 import keras.backend as K
-from keras.models import Sequential
-from keras.layers import Dense, Dropout, Conv2D, Flatten
+from keras.models import Sequential, Model
+from keras.layers import Dense, Dropout, Conv2D, Flatten, Input
 from sklearn.model_selection import KFold
 from sklearn.model_selection import cross_val_score
 from keras.models import load_model
@@ -39,7 +39,7 @@ def exp_loss(y_true, y_pred):
 	"""
 	Custom loss function. 
 	"""
-	loss = K.exp((y_pred - y_true))
+	loss = K.exp((y_pred - y_true)) / 10
 	loss = loss + K.square((y_pred - y_true) / 2)
 	loss = K.mean(loss, axis = 1)
 
@@ -49,6 +49,22 @@ def exp_loss(y_true, y_pred):
 keras.losses.custom_loss = custom_loss
 keras.losses.exp_loss = exp_loss
 
+# define custom metrics below
+def bound_above_and_below(i):
+	"""
+	returns a function for computing loss such that it is 1 if prediction was
+	above acutal distance or below manhattan distance
+	"""
+	i2 = K.reshape(i, (16,16))
+	i3 = K.eval(i2).reshape(256)
+	board = unencode_board(i3)
+	man_dist = manhattan(board)
+
+	def loss(y_true, y_pred):
+		return K.abs(K.sign(y_true - y_pred) + K.sign(man_dist - y_pred)) / 2
+
+	return loss
+
 def neural_net_heuristic(board, model):
 
 	"""
@@ -57,6 +73,22 @@ def neural_net_heuristic(board, model):
 	"""
 	[[pred]] = model.predict(one_hot_encode(board).reshape(1,256))
 	return round(pred)
+
+def unencode_board(encoding):
+	"""
+	given a one-hot encoding of the board as returned by one_hot_encode,
+	returns encoding of board in original format
+	"""
+	s2 = SIZE ** 2
+	board = np.zeros(s2)
+
+	for i in range(0,s2):
+		for j in range(0,s2):
+			curr_ind = i * s2 + j
+			if encoding[curr_ind] == 1:
+				board[j] = i + 1
+	board = board.reshape((SIZE, SIZE))
+	return board
 
 def one_hot_encode(board):
 	""" 
@@ -162,6 +194,42 @@ def evaluate(file_name):
 
 	return model
 
+
+def evaluate_custom_funcs(file_name, cust_loss, cust_metric):
+	"""
+	This function reads in training data from a file and 
+	trains and evaluates NN model using kfold validation. 
+	Specifically uses custom loss function with 
+	"""
+	(X,Y) = load_data(file_name)
+
+	# Implement K-fold cross validation
+	kfold = KFold(n_splits=10, shuffle=True, random_state=2020)
+
+	for train, test in kfold.split(X, Y):
+		# Build Model
+		i = Input(shape = (256,))
+		x_1 = Dense(16, activation='relu')(i)
+		#x_2 = Dropout(0.1)(x_1)
+		#x_3 = Dense(16, activation='relu')(x_2)
+		o = Dense(1, activation='linear')(x_1)
+		model = Model(i,o)
+
+		# Define the optimizer and loss function
+		# model.compile(optimizer='adam', loss=cust_loss, metrics=cust_metric(i))
+		model.compile(optimizer = 'adam', loss = cust_loss, metrics=['accuracy'])
+		# You can also define a custom loss function
+		# model.compile(optimizer='adam', loss=custom_loss)
+
+		# Train 
+		model.fit(X[train], Y[train], epochs=20)
+
+		# Evaluate
+		score = model.evaluate(X[test], Y[test], verbose=0)
+		print(score)
+
+	return model
+
 def train(file_name):
 	"""
 	This function reads in training data from a file and returns a 
@@ -243,6 +311,7 @@ if __name__ == "__main__":
 	# Toy Example Testing 
 	# To train on the entire data set, replace evaluate with train
 	model = evaluate(file_name)
+	# model = evaluate_custom_funcs(file_name, exp_loss, bound_above_and_below)
 	model.save(out_file)
 	board = gen_board()
 	print(neural_net_heuristic(board, model))
