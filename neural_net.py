@@ -45,9 +45,20 @@ def exp_loss(y_true, y_pred):
 
 	return loss
 
+def exp_loss_2(y_true, y_pred):
+	"""
+	Custom loss function. 
+	"""
+	loss = K.exp((y_pred - y_true)) / 2
+	loss = loss + K.square(y_pred - y_true)
+	loss = K.mean(loss, axis = 1)
+
+	return loss
+
 # define custom loss functions in keras so can load model
 keras.losses.custom_loss = custom_loss
 keras.losses.exp_loss = exp_loss
+keras.losses.exp_loss_2 = exp_loss_2
 
 # define custom metrics below
 def bound_above_and_below(i):
@@ -209,7 +220,7 @@ def evaluate_custom_funcs(file_name, cust_loss, cust_metric):
 	for train, test in kfold.split(X, Y):
 		# Build Model
 		i = Input(shape = (256,))
-		x_1 = Dense(16, activation='relu')(i)
+		x_1 = Dense(256, activation='relu')(i)
 		#x_2 = Dropout(0.1)(x_1)
 		#x_3 = Dense(16, activation='relu')(x_2)
 		o = Dense(1, activation='linear')(x_1)
@@ -217,12 +228,12 @@ def evaluate_custom_funcs(file_name, cust_loss, cust_metric):
 
 		# Define the optimizer and loss function
 		# model.compile(optimizer='adam', loss=cust_loss, metrics=cust_metric(i))
-		model.compile(optimizer = 'adam', loss = cust_loss, metrics=['accuracy'])
+		model.compile(optimizer = 'adam', loss = exp_loss_2, metrics=['accuracy'])
 		# You can also define a custom loss function
 		# model.compile(optimizer='adam', loss=custom_loss)
 
 		# Train 
-		model.fit(X[train], Y[train], epochs=20)
+		model.fit(X[train], Y[train], epochs=10)
 
 		# Evaluate
 		score = model.evaluate(X[test], Y[test], verbose=0)
@@ -310,7 +321,8 @@ if __name__ == "__main__":
 
 	# Toy Example Testing 
 	# To train on the entire data set, replace evaluate with train
-	model = evaluate(file_name)
+	#model = evaluate(file_name)
+	model = evaluate_custom_funcs(file_name, exp_loss, None)
 	# model = evaluate_custom_funcs(file_name, exp_loss, bound_above_and_below)
 	model.save(out_file)
 	board = gen_board()
