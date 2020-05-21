@@ -215,14 +215,14 @@ def evaluate_custom_funcs(file_name, cust_loss, cust_metric):
 	(X,Y) = load_data(file_name)
 
 	# Implement K-fold cross validation
-	kfold = KFold(n_splits=10, shuffle=True, random_state=2020)
+	kfold = KFold(n_splits=5, shuffle=True, random_state=2020)
 
 	for train, test in kfold.split(X, Y):
 		# Build Model
 		i = Input(shape = (256,))
 		x_1 = Dense(256, activation='relu')(i)
-		#x_2 = Dropout(0.1)(x_1)
-		#x_3 = Dense(16, activation='relu')(x_2)
+		x_2 = Dropout(0.1)(x_1)
+		x_3 = Dense(16, activation='relu')(x_2)
 		o = Dense(1, activation='linear')(x_1)
 		model = Model(i,o)
 
@@ -233,7 +233,7 @@ def evaluate_custom_funcs(file_name, cust_loss, cust_metric):
 		# model.compile(optimizer='adam', loss=custom_loss)
 
 		# Train 
-		model.fit(X[train], Y[train], epochs=10)
+		model.fit(X[train], Y[train], epochs=15)
 
 		# Evaluate
 		score = model.evaluate(X[test], Y[test], verbose=0)
