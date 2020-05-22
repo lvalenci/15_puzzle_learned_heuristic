@@ -24,307 +24,316 @@ from solver import *
 
 # Must define all custom loss function here
 def custom_loss(y_true, y_pred): 
-	"""
-	This custom loss function takes in y_true and y_pred and returns
-	the loss. It cannot take more than two arguments.
-	"""
+    """
+    This custom loss function takes in y_true and y_pred and returns
+    the loss. It cannot take more than two arguments.
+    """
 
-	# Slighly different verson of mse, for example 
-	loss = K.square((y_pred - y_true)/10)
-	loss = K.mean(loss, axis=1)
+    # Slighly different verson of mse, for example 
+    loss = K.square((y_pred - y_true)/10)
+    loss = K.mean(loss, axis=1)
 
-	return loss
+    return loss
 
 def exp_loss(y_true, y_pred):
-	"""
-	Custom loss function. 
-	"""
-	loss = K.exp((y_pred - y_true)) / 10
-	loss = loss + K.square((y_pred - y_true) / 2)
-	loss = K.mean(loss, axis = 1)
+    """
+    Custom loss function. 
+    """
+    loss = K.exp((y_pred - y_true)) / 10
+    loss = loss + K.square((y_pred - y_true) / 2)
+    loss = K.mean(loss, axis = 1)
 
-	return loss
+    return loss
 
 def exp_loss_2(y_true, y_pred):
-	"""
-	Custom loss function. 
-	"""
-	loss = K.exp((y_pred - y_true)) / 2
-	loss = loss + K.square(y_pred - y_true)
-	loss = K.mean(loss, axis = 1)
+    """
+    Custom loss function. 
+    """
+    loss = K.exp((y_pred - y_true)) / 2
+    loss = loss + K.square(y_pred - y_true)
+    loss = K.mean(loss, axis = 1)
 
-	return loss
+    return loss
+
+def shift_mse(y_true, y_pred):
+    """custom loss functions"""
+    loss = (1 + 1/ (1 + K.exp(-(y_pred - y_true)))) * K.square(y_pred - y_true)
+    loss = K.mean(loss, axis = 1)
+    return loss
 
 # define custom loss functions in keras so can load model
 keras.losses.custom_loss = custom_loss
 keras.losses.exp_loss = exp_loss
 keras.losses.exp_loss_2 = exp_loss_2
+keras.losses.shift_mse = shift_mse
 
 # define custom metrics below
 def bound_above_and_below(i):
-	"""
-	returns a function for computing loss such that it is 1 if prediction was
-	above acutal distance or below manhattan distance
-	"""
-	i2 = K.reshape(i, (16,16))
-	i3 = K.eval(i2).reshape(256)
-	board = unencode_board(i3)
-	man_dist = manhattan(board)
+    """
+    returns a function for computing loss such that it is 1 if prediction was
+    above acutal distance or below manhattan distance
+    """
+    i2 = K.reshape(i, (16,16))
+    i3 = K.eval(i2).reshape(256)
+    board = unencode_board(i3)
+    man_dist = manhattan(board)
 
-	def loss(y_true, y_pred):
-		return K.abs(K.sign(y_true - y_pred) + K.sign(man_dist - y_pred)) / 2
+    def loss(y_true, y_pred):
+        return K.abs(K.sign(y_true - y_pred) + K.sign(man_dist - y_pred)) / 2
 
-	return loss
+    return loss
 
 def neural_net_heuristic(board, model):
 
-	"""
-	This function takes in a board and a trained NN model and returns
-	the heuristic the model predicts.
-	"""
-	[[pred]] = model.predict(one_hot_encode(board).reshape(1,256))
-	return round(pred)
+    """
+    This function takes in a board and a trained NN model and returns
+    the heuristic the model predicts.
+    """
+    [[pred]] = model.predict(one_hot_encode(board).reshape(1,256))
+    return round(pred)
 
 def unencode_board(encoding):
-	"""
-	given a one-hot encoding of the board as returned by one_hot_encode,
-	returns encoding of board in original format
-	"""
-	s2 = SIZE ** 2
-	board = np.zeros(s2)
+    """
+    given a one-hot encoding of the board as returned by one_hot_encode,
+    returns encoding of board in original format
+    """
+    s2 = SIZE ** 2
+    board = np.zeros(s2)
 
-	for i in range(0,s2):
-		for j in range(0,s2):
-			curr_ind = i * s2 + j
-			if encoding[curr_ind] == 1:
-				board[j] = i + 1
-	board = board.reshape((SIZE, SIZE))
-	return board
+    for i in range(0,s2):
+        for j in range(0,s2):
+            curr_ind = i * s2 + j
+            if encoding[curr_ind] == 1:
+                board[j] = i + 1
+    board = board.reshape((SIZE, SIZE))
+    return board
 
 def one_hot_encode(board):
-	""" 
-	This function one hot encodes the board into a length 256 array.
-	The one hot encoding gives the location of each number in the board.
-	For example, the first 16 of the 256 numbers will indicate where on
-	the board the 1 tile is. 
-	"""
+    """ 
+    This function one hot encodes the board into a length 256 array.
+    The one hot encoding gives the location of each number in the board.
+    For example, the first 16 of the 256 numbers will indicate where on
+    the board the 1 tile is. 
+    """
 
-	flat = (board.reshape(SIZE ** 2)).tolist()
-	
-	X = []
-	for i in np.arange(1,17): 
-		encoding = np.zeros(SIZE ** 2)
-		encoding[flat.index(i)] = 1
+    flat = (board.reshape(SIZE ** 2)).tolist()
+    
+    X = []
+    for i in np.arange(1,17): 
+        encoding = np.zeros(SIZE ** 2)
+        encoding[flat.index(i)] = 1
 
-		X.append(encoding)	
+        X.append(encoding)  
 
-	X = (np.asarray(X).reshape(SIZE ** 4))
+    X = (np.asarray(X).reshape(SIZE ** 4))
 
-	# Potentially append Manhattan distance. 
-	# np.append(X, manhattan(board))
+    # Potentially append Manhattan distance. 
+    # np.append(X, manhattan(board))
 
-	return X
+    return X
 
 def load_data(file_name):
-	"""
-	This function reads in training data from a file and returns 
-	the one-hot encoded data X and their labels Y as a tuple. 
-	"""
-	file = open(file_name, "r")
+    """
+    This function reads in training data from a file and returns 
+    the one-hot encoded data X and their labels Y as a tuple. 
+    """
+    file = open(file_name, "r")
 
-	X = []
-	Y = []
+    X = []
+    Y = []
 
-	for string in file: 
-		(board, dist) = string_to_board_and_dist(string) 
+    for string in file: 
+        (board, dist) = string_to_board_and_dist(string) 
 
-		X.append(one_hot_encode(board))
-		Y.append(dist)
+        X.append(one_hot_encode(board))
+        Y.append(dist)
 
-	file.close()
+    file.close()
 
-	return(np.asarray(X),np.asarray(Y))
+    return(np.asarray(X),np.asarray(Y))
 
 def find_over_estimate(file_name, model_file):
-	"""
-	This function takes in a model saved in model_file and data points in 
-	file_name and prints out the percentage of times said model predicted 
-	a distance greater than the actual distance and the percentage of times
-	said model predicted a distance less than the Manhattan Distance
-	"""
-	model = load_model(model_file)
-	data = open(file_name, "r")
-	over = []
-	under = []
+    """
+    This function takes in a model saved in model_file and data points in 
+    file_name and prints out the percentage of times said model predicted 
+    a distance greater than the actual distance and the percentage of times
+    said model predicted a distance less than the Manhattan Distance
+    """
+    model = load_model(model_file)
+    data = open(file_name, "r")
+    over = []
+    under = []
 
-	for line in data:
-		(board, dist) = string_to_board_and_dist(line)
-		man_dist = manhattan(board)
-		pred = neural_net_heuristic(board, model)
-		over.append(pred > dist)
-		under.append(pred < man_dist)
+    for line in data:
+        (board, dist) = string_to_board_and_dist(line)
+        man_dist = manhattan(board)
+        pred = neural_net_heuristic(board, model)
+        over.append(pred > dist)
+        under.append(pred < man_dist)
 
-	print("prediction less than manhattan percent of the time", sum(under) * 100 / len(under))
-	print("prediction greater than actual distance precent of the time", sum(over) * 100 / len(over))
+    print("prediction less than manhattan percent of the time", sum(under) * 100 / len(under))
+    print("prediction greater than actual distance precent of the time", sum(over) * 100 / len(over))
 
 
 def evaluate(file_name):
-	"""
-	This function reads in training data from a file and 
-	trains and evaluates NN model using kfold validation. 
-	"""
-	(X,Y) = load_data(file_name)
+    """
+    This function reads in training data from a file and 
+    trains and evaluates NN model using kfold validation. 
+    """
+    (X,Y) = load_data(file_name)
 
-	# Implement K-fold cross validation
-	kfold = KFold(n_splits=10, shuffle=True, random_state=2020)
+    # Implement K-fold cross validation
+    kfold = KFold(n_splits=10, shuffle=True, random_state=2020)
 
-	for train, test in kfold.split(X, Y):
-		# Build Model
-		model = Sequential()
+    for train, test in kfold.split(X, Y):
+        # Build Model
+        model = Sequential()
 
-		# Input Layer
-		model.add(Dense(units=256, input_dim=256, activation='relu'))
-		model.add(Dropout(0.1))
-		# Hidden Layers
-		model.add(Dense(units=256, activation='relu'))
-		# Output Layer
-		model.add(Dense(units=1, activation='linear'))
+        # Input Layer
+        model.add(Dense(units=256, input_dim=256, activation='relu'))
+        model.add(Dropout(0.1))
+        # Hidden Layers
+        model.add(Dense(units=256, activation='relu'))
+        # Output Layer
+        model.add(Dense(units=1, activation='linear'))
 
-		# Define the optimizer and loss function
-		model.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
+        # Define the optimizer and loss function
+        model.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
 
-		# You can also define a custom loss function
-		# model.compile(optimizer='adam', loss=custom_loss)
+        # You can also define a custom loss function
+        # model.compile(optimizer='adam', loss=custom_loss)
 
-		# Train 
-		model.fit(X[train], Y[train], epochs=20)
+        # Train 
+        model.fit(X[train], Y[train], epochs=20)
 
-		# Evaluate
-		score = model.evaluate(X[test], Y[test], verbose=0)
-		print(score)
+        # Evaluate
+        score = model.evaluate(X[test], Y[test], verbose=0)
+        print(score)
 
-	return model
+    return model
 
 
 def evaluate_custom_funcs(file_name, cust_loss, cust_metric):
-	"""
-	This function reads in training data from a file and 
-	trains and evaluates NN model using kfold validation. 
-	Specifically uses custom loss function with 
-	"""
-	(X,Y) = load_data(file_name)
+    """
+    This function reads in training data from a file and 
+    trains and evaluates NN model using kfold validation. 
+    Specifically uses custom loss function with 
+    """
+    (X,Y) = load_data(file_name)
 
-	# Implement K-fold cross validation
-	kfold = KFold(n_splits=5, shuffle=True, random_state=2020)
+    # Implement K-fold cross validation
+    kfold = KFold(n_splits=5, shuffle=True, random_state=2020)
 
-	for train, test in kfold.split(X, Y):
-		# Build Model
-		i = Input(shape = (256,))
-		x_1 = Dense(256, activation='relu')(i)
-		x_2 = Dropout(0.1)(x_1)
-		x_3 = Dense(16, activation='relu')(x_2)
-		o = Dense(1, activation='linear')(x_1)
-		model = Model(i,o)
+    for train, test in kfold.split(X, Y):
+        # Build Model
+        i = Input(shape = (256,))
+        x_1 = Dense(256, activation='relu')(i)
+        x_2 = Dropout(0.1)(x_1)
+        x_3 = Dense(64, activation='relu')(x_2)
+        x_4 = Dropout(0.1)(x_3)
+        x_5 = Dense(16, activation='relu')(x_4)
+        o = Dense(1, activation='linear')(x_1)
+        model = Model(i,o)
 
-		# Define the optimizer and loss function
-		# model.compile(optimizer='adam', loss=cust_loss, metrics=cust_metric(i))
-		model.compile(optimizer = 'adam', loss = exp_loss_2, metrics=['accuracy'])
-		# You can also define a custom loss function
-		# model.compile(optimizer='adam', loss=custom_loss)
+        # Define the optimizer and loss function
+        # model.compile(optimizer='adam', loss=cust_loss, metrics=cust_metric(i))
+        model.compile(optimizer = 'adam', loss = shift_mse, metrics=['accuracy'])
+        # You can also define a custom loss function
+        # model.compile(optimizer='adam', loss=custom_loss)
 
-		# Train 
-		model.fit(X[train], Y[train], epochs=15)
+        # Train 
+        model.fit(X[train], Y[train], epochs=15)
 
-		# Evaluate
-		score = model.evaluate(X[test], Y[test], verbose=0)
-		print(score)
+        # Evaluate
+        score = model.evaluate(X[test], Y[test], verbose=0)
+        print(score)
 
-	return model
+    return model
 
 def train(file_name):
-	"""
-	This function reads in training data from a file and returns a 
-	trained NN model. 
-	"""
-	(X,Y) = load_data(file_name)
+    """
+    This function reads in training data from a file and returns a 
+    trained NN model. 
+    """
+    (X,Y) = load_data(file_name)
 
-	# Build Model
-	model = Sequential()
+    # Build Model
+    model = Sequential()
 
-	# Input Layer
-	model.add(Dense(units=256, input_dim=256, activation='relu'))
-	model.add(Dropout(0.1))
-	# Hidden Layers
-	model.add(Dense(units=256, activation='relu'))
-	# Output Layer
-	model.add(Dense(units=1, activation='linear'))
+    # Input Layer
+    model.add(Dense(units=256, input_dim=256, activation='relu'))
+    model.add(Dropout(0.1))
+    # Hidden Layers
+    model.add(Dense(units=256, activation='relu'))
+    # Output Layer
+    model.add(Dense(units=1, activation='linear'))
 
-	# Define the optimizer and loss function
-	model.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
+    # Define the optimizer and loss function
+    model.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
 
-	# You can also define a custom loss function
-	# model.compile(optimizer='adam', loss=custom_loss)
+    # You can also define a custom loss function
+    # model.compile(optimizer='adam', loss=custom_loss)
 
-	# Train 
-	model.fit(X, Y, epochs=20)
+    # Train 
+    model.fit(X, Y, epochs=20)
 
-	return model
+    return model
 
 def train_custom_loss(file_name, loss_func):
-	"""
-	This function reads in training data from a file and returns a 
-	trained NN model.  This NN model is trained with specificed loss
-	function
-	"""
-	(X,Y) = load_data(file_name)
+    """
+    This function reads in training data from a file and returns a 
+    trained NN model.  This NN model is trained with specificed loss
+    function
+    """
+    (X,Y) = load_data(file_name)
 
-	# Build Model
-	model = Sequential()
+    # Build Model
+    model = Sequential()
 
-	# Input Layer
-	model.add(Dense(units=256, input_dim=256, activation='relu'))
-	model.add(Dropout(0.1))
-	# Hidden Layers
-	model.add(Dense(units=256, activation='relu'))
-	# Output Layer
-	model.add(Dense(units=1, activation='linear'))
+    # Input Layer
+    model.add(Dense(units=256, input_dim=256, activation='relu'))
+    model.add(Dropout(0.1))
+    # Hidden Layers
+    model.add(Dense(units=256, activation='relu'))
+    # Output Layer
+    model.add(Dense(units=1, activation='linear'))
 
-	# Define the optimizer and loss function
-	model.compile(optimizer='adam', loss=exp_loss, metrics=['accuracy'])
+    # Define the optimizer and loss function
+    model.compile(optimizer='adam', loss=exp_loss, metrics=['accuracy'])
 
-	# You can also define a custom loss function
-	# model.compile(optimizer='adam', loss=custom_loss)
+    # You can also define a custom loss function
+    # model.compile(optimizer='adam', loss=custom_loss)
 
-	# Train 
-	model.fit(X, Y, epochs=20)
+    # Train 
+    model.fit(X, Y, epochs=20)
 
-	return model
+    return model
 
 def run_saved_model(model_file, data_file):
-	"""
-	given a file to which a model is saved a a datafile, runs model on data
-	on code to evaluate accuracy and score
-	"""
-	model = load_model(model_file)
-	(X, Y) = load_data(data_file)
-	score = model.evaluate(X, Y, verbose = 0)
-	print(score)
+    """
+    given a file to which a model is saved a a datafile, runs model on data
+    on code to evaluate accuracy and score
+    """
+    model = load_model(model_file)
+    (X, Y) = load_data(data_file)
+    score = model.evaluate(X, Y, verbose = 0)
+    print(score)
 
 if __name__ == "__main__":
 
-	if not (len(sys.argv) == 3):
-		print("usage error:\n arg1 = input file name \n arg2 = file to save model to")
-		exit()
+    if not (len(sys.argv) == 3):
+        print("usage error:\n arg1 = input file name \n arg2 = file to save model to")
+        exit()
 
-	file_name = sys.argv[1] 
-	out_file = sys.argv[2]
+    file_name = sys.argv[1] 
+    out_file = sys.argv[2]
 
-	# Toy Example Testing 
-	# To train on the entire data set, replace evaluate with train
-	#model = evaluate(file_name)
-	model = evaluate_custom_funcs(file_name, exp_loss, None)
-	# model = evaluate_custom_funcs(file_name, exp_loss, bound_above_and_below)
-	model.save(out_file)
-	board = gen_board()
-	print(neural_net_heuristic(board, model))
-	print(manhattan(board))
+    # Toy Example Testing 
+    # To train on the entire data set, replace evaluate with train
+    #model = evaluate(file_name)
+    model = evaluate_custom_funcs(file_name, exp_loss, None)
+    # model = evaluate_custom_funcs(file_name, exp_loss, bound_above_and_below)
+    model.save(out_file)
+    board = gen_board()
+    print(neural_net_heuristic(board, model))
+    print(manhattan(board))
