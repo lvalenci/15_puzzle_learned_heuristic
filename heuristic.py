@@ -14,10 +14,11 @@ def get_proper_loc(val):
     j = (val-1) % SIZE
     return (i,j)
 
-def hamming(board):
+def hamming(board, trash):
     """
     computes the hamming metric from the board to the solved state and returns 
     it
+    trash is merely to get to conform to standard metric implementation
     https://en.wikipedia.org/wiki/Hamming_distance
     """
     dist = 0
@@ -30,10 +31,11 @@ def hamming(board):
     return dist
 
 
-def manhattan(board):
+def manhattan(board, trash):
     """
     computes the manhattan metric from the board to the solved stateand returns 
     it
+    trash is merely to get to conform to standard metric implementation
     https://en.wikipedia.org/wiki/Taxicab_geometry
     """
     dist = 0

@@ -23,7 +23,7 @@ def gen_data(run_time, file_name):
     end_time = start_time
     file = open(file_name, "w")
     while(end_time - start_time < run_time):
-        (_, _, path) = solve(gen_board(), manhattan)
+        (_, _, path) = solve(gen_board(), manhattan, None)
         for i in range(0, len(path)):
             output = board_and_dist_to_string(path[i], i)
             file.write(output+'\n')

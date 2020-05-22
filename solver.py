@@ -107,11 +107,11 @@ def gen_board():
 
     return board
 
-def solve(board, metric):
-    """given a (solvable) board and a metric, this function solves the N-puzzle
-    through A* search
-    metric must only take in argument of board as a SIZE x SIZE np array
-    board must be a SIZE x SIZE np array returned from gen_board()
+def solve(board, metric, model):
+    """given a (solvable) board, metric, and model for evaluating board,
+     this function solves the N-puzzle through A* search
+    metric must take in argument of board as a SIZE x SIZE np array
+    board must be a SIZE x SIZE np array returned from gen_board() and a model
     Return (n_states, tot_time, sol_path)
     n_states: the number of states visited during A* search,
         this includes the start and end states
@@ -166,7 +166,7 @@ def solve(board, metric):
 
         for move in poss_moves:
             new_board = make_move(curr_board, blank_loc, move)
-            est_dist = metric(new_board) + dist
+            est_dist = metric(new_board, model) + dist
             new_path = copy.deepcopy(path)
             new_path.append(new_board)
             h.heappush(queue, (est_dist, dist + 1, count, new_path))
