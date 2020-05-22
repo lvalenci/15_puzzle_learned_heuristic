@@ -9,3 +9,6 @@ HOUR_TO_SEC = 3600
 
 # file ending for data-storing file
 FILE_ENDING = ".txt"
+
+# number of boards to test with
+NUM_TEST_BOARDS = 10000
