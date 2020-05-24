@@ -31,3 +31,26 @@ def string_to_board_and_dist(string):
     dist = int(split[0])
     board = string_to_board(split[1])
     return (board, dist)
+
+def test_info_to_string(board, states, time, sol_len):
+    """
+    given a board, number of states, time, and lenght of solution, converts it
+    to standard form for output.
+    """
+    board_rep = board_to_string(board) + "!"
+    state_rep = str(states) + "!"
+    time_rep = str(time) + "!"
+    len_rep = str(sol_len)
+    return board_rep + state_rep + time_rep + len_rep
+
+def string_to_test_info(string):
+    """
+    given a string containing the standard form of test info, returns tuple of 
+    board, number of states to solution, time, and lenght of solution
+    """
+    split = string.split("!")
+    board = string_to_board(split[0])
+    n_states = int(split[1])
+    time = float(split[2])
+    sol_len = int(split[3])
+    return (board, n_states, time, sol_len)

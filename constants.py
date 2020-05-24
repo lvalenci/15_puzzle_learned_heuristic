@@ -11,4 +11,4 @@ HOUR_TO_SEC = 3600
 FILE_ENDING = ".txt"
 
 # number of boards to test with
-NUM_TEST_BOARDS = 10000
+NUM_TEST_BOARDS = 1000
