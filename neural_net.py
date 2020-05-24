@@ -166,7 +166,7 @@ def find_over_estimate(file_name, model_file):
 
     for line in data:
         (board, dist) = string_to_board_and_dist(line)
-        man_dist = manhattan(board)
+        man_dist = manhattan(board, None)
         pred = neural_net_heuristic(board, model)
         over.append(pred > dist)
         under.append(pred < man_dist)
@@ -336,4 +336,4 @@ if __name__ == "__main__":
     model.save(out_file)
     board = gen_board()
     print(neural_net_heuristic(board, model))
-    print(manhattan(board))
+    print(manhattan(board, None))
