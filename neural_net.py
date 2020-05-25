@@ -8,13 +8,13 @@ EX: python3 neural_net.py Meena_5_16_89475.txt saved_model.txt
 
 import numpy as np
 import sys
-import keras.backend as K
-from keras.models import Sequential, Model
-from keras.layers import Dense, Dropout, Conv2D, Flatten, Input
+import tensorflow.keras.backend as K
+from tensorflow.keras.models import Sequential, Model
+from tensorflow.keras.layers import Dense, Dropout, Conv2D, Flatten, Input
 from sklearn.model_selection import KFold
 from sklearn.model_selection import cross_val_score
-from keras.models import load_model
-import keras.losses
+from tensorflow.keras.models import load_model
+import tensorflow.keras.losses
 
 from constants import * 
 from heuristic import *
@@ -75,11 +75,11 @@ def bounded_loss(input_layer):
     return bounded_inside
 
 # define custom loss functions in keras so can load model
-keras.losses.custom_loss = custom_loss
-keras.losses.exp_loss = exp_loss
-keras.losses.exp_loss_2 = exp_loss_2
-keras.losses.shift_mse = shift_mse
-keras.losses.bounded_loss = bounded_loss
+tensorflow.keras.losses.custom_loss = custom_loss
+tensorflow.keras.losses.exp_loss = exp_loss
+tensorflow.keras.losses.exp_loss_2 = exp_loss_2
+tensorflow.keras.losses.shift_mse = shift_mse
+tensorflow.keras.losses.bounded_loss = bounded_loss
 
 # define custom metrics below
 def bound_above_and_below(i):

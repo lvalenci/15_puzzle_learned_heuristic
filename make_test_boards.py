@@ -10,7 +10,9 @@ import solver as s
 if __name__ == "__main__":
     file = open("Test_boards.txt", "w")
 
-    for _ in range(NUM_TEST_BOARDS):
+    for i in range(NUM_TEST_BOARDS):
+        if (i % 50 == 0):
+            print(i)
         board = s.gen_board()
         (c_states, c_time, c_path) = s.solve(board, h.manhattan, None)
         info_rep = io.test_info_to_string(board, c_states, c_time, len(c_path) - 1)
