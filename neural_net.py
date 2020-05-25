@@ -21,7 +21,6 @@ from heuristic import *
 from io_help import *
 from solver import *
 
-
 # Must define all custom loss function here
 def custom_loss(y_true, y_pred): 
     """
@@ -61,11 +60,26 @@ def shift_mse(y_true, y_pred):
     loss = K.mean(loss, axis = 1)
     return loss
 
+def bounded_loss(input_layer):
+    """returns exp loss if prediction greater than actual or less than manhattan, otherwise
+    linear loss"""
+    def bounded_inside(y_true, y_pred):
+        #i2 = K.eval(input_layer)
+        board = unencode_board(input_layer)
+        man_dist = manhattan(board)
+        if (K.eval(y_pred) > K.eval(y_true)):
+            return K.exp((y_pred - y_true))
+        if (K.eval(y_pred) < man_dist):
+            return K.exp((y_true - y_pred))
+        return (K.eval(y_true - y_pred))
+    return bounded_inside
+
 # define custom loss functions in keras so can load model
 keras.losses.custom_loss = custom_loss
 keras.losses.exp_loss = exp_loss
 keras.losses.exp_loss_2 = exp_loss_2
 keras.losses.shift_mse = shift_mse
+keras.losses.bounded_loss = bounded_loss
 
 # define custom metrics below
 def bound_above_and_below(i):
@@ -73,12 +87,12 @@ def bound_above_and_below(i):
     returns a function for computing loss such that it is 1 if prediction was
     above acutal distance or below manhattan distance
     """
-    i2 = K.reshape(i, (16,16))
-    i3 = K.eval(i2).reshape(256)
-    board = unencode_board(i3)
+    i2 = K.eval(i)
+    board = unencode_board(i2)
     man_dist = manhattan(board)
 
     def loss(y_true, y_pred):
+
         return K.abs(K.sign(y_true - y_pred) + K.sign(man_dist - y_pred)) / 2
 
     return loss
@@ -103,7 +117,7 @@ def unencode_board(encoding):
     for i in range(0,s2):
         for j in range(0,s2):
             curr_ind = i * s2 + j
-            if encoding[curr_ind] == 1:
+            if K.get_value(encoding[curr_ind]) == 1:
                 board[j] = i + 1
     board = board.reshape((SIZE, SIZE))
     return board
@@ -237,7 +251,7 @@ def evaluate_custom_funcs(file_name, cust_loss, cust_metric):
 
         # Define the optimizer and loss function
         # model.compile(optimizer='adam', loss=cust_loss, metrics=cust_metric(i))
-        model.compile(optimizer = 'adam', loss = shift_mse, metrics=['accuracy'])
+        model.compile(optimizer = 'adam', loss = bounded_loss(i), metrics=['accuracy'])
         # You can also define a custom loss function
         # model.compile(optimizer='adam', loss=custom_loss)
 
@@ -331,8 +345,8 @@ if __name__ == "__main__":
     # Toy Example Testing 
     # To train on the entire data set, replace evaluate with train
     #model = evaluate(file_name)
-    model = evaluate_custom_funcs(file_name, exp_loss, None)
-    # model = evaluate_custom_funcs(file_name, exp_loss, bound_above_and_below)
+    #model = evaluate_custom_funcs(file_name, exp_loss, None)
+    model = evaluate_custom_funcs(file_name, exp_loss, bound_above_and_below)
     model.save(out_file)
     board = gen_board()
     print(neural_net_heuristic(board, model))
