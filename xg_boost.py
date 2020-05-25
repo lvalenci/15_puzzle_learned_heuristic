@@ -7,6 +7,7 @@ EX: python3 xg_boost.py Meena_5_16_89475.txt saved_model.txt
 """
 import numpy as np
 import sys
+import pickle
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 import xgboost as xgb
 from xgboost import XGBClassifier
@@ -115,8 +116,7 @@ def run_saved_model(model_file, data_file):
 	given a file to which a model is saved a a datafile, runs model on data
 	on code to evaluate accuracy and score
 	"""
-	model = XGBClassifier();
-	model.load_model(model_file)
+	model = pickle.load(open(model_file, "rb"))
 	(X, Y) = load_data(data_file)
 	model._le = LabelEncoder().fit(Y)
 	y_pred = model.predict(X)
@@ -137,6 +137,9 @@ if __name__ == "__main__":
 	# To train on the entire data set, replace evaluate with train
 	model = train(file_name)
 	board = gen_board()
-	model.save_model(save_file)
-	print(xgboost_heuristic(board, model))
-	print(manhattan(board))
+
+	pickle.dump(model, open(save_file, "wb"))
+
+	run_saved_model(save_file, "All_Data.txt")
+	#print(xgboost_heuristic(board, model))
+	#print(manhattan(board))
