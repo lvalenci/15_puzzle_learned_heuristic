@@ -85,7 +85,6 @@ if __name__ == "__main__":
     if (sys.argv[3] == 'xgboost'):
         exit()
         # TODO
-
     run_testing(sys.argv[1], model, h_func)
 
     
