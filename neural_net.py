@@ -305,21 +305,23 @@ def train_custom_loss(file_name, loss_func):
     model = Sequential()
 
     # Input Layer
-    model.add(Dense(units=256, input_dim=256, activation='relu'))
-    model.add(Dropout(0.1))
-    # Hidden Layers
-    model.add(Dense(units=256, activation='relu'))
-    # Output Layer
-    model.add(Dense(units=1, activation='linear'))
+    i = Input(shape = (256,))
+    x_1 = Dense(256, activation='relu')(i)
+    x_2 = Dropout(0.1)(x_1)
+    x_3 = Dense(64, activation='relu')(x_2)
+    x_4 = Dropout(0.1)(x_3)
+    x_5 = Dense(16, activation='relu')(x_4)
+    o = Dense(1, activation='linear')(x_1)
+    model = Model(i,o)
 
     # Define the optimizer and loss function
-    model.compile(optimizer='adam', loss=exp_loss, metrics=['accuracy'])
+    model.compile(optimizer='adam', loss=loss_func, metrics=['accuracy'])
 
     # You can also define a custom loss function
     # model.compile(optimizer='adam', loss=custom_loss)
 
     # Train 
-    model.fit(X, Y, epochs=20)
+    model.fit(X, Y, epochs=15)
 
     return model
 
@@ -346,7 +348,7 @@ if __name__ == "__main__":
     # To train on the entire data set, replace evaluate with train
     #model = evaluate(file_name)
     #model = evaluate_custom_funcs(file_name, exp_loss, None)
-    model = evaluate_custom_funcs(file_name, exp_loss, bound_above_and_below)
+    model = train_custom_funcs(file_name, shift_mse)
     model.save(out_file)
     board = gen_board()
     print(neural_net_heuristic(board, model))
