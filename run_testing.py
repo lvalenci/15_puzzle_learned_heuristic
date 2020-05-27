@@ -77,7 +77,7 @@ if __name__ == "__main__":
     model = None
     h_func = None
     if (sys.argv[3] == 'nn'):
-        model = nn.load_model(sys.argv[2])
+        #model = nn.load_model(sys.argv[2])
         h_func = nn.neural_net_heuristic
     if (sys.argv[3] == 'cnn'):
         exit()
@@ -85,6 +85,7 @@ if __name__ == "__main__":
     if (sys.argv[3] == 'xgboost'):
         exit()
         # TODO
+    model = nn.train("All_Data.txt")
     run_testing(sys.argv[1], model, h_func)
 
     

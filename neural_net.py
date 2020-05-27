@@ -251,7 +251,7 @@ def evaluate_custom_funcs(file_name, cust_loss, cust_metric):
 
         # Define the optimizer and loss function
         # model.compile(optimizer='adam', loss=cust_loss, metrics=cust_metric(i))
-        model.compile(optimizer = 'adam', loss = bounded_loss(i), metrics=['accuracy'])
+        model.compile(optimizer = 'adam', loss = cust_loss, metrics=['accuracy'])
         # You can also define a custom loss function
         # model.compile(optimizer='adam', loss=custom_loss)
 
@@ -275,21 +275,23 @@ def train(file_name):
     model = Sequential()
 
     # Input Layer
-    model.add(Dense(units=256, input_dim=256, activation='relu'))
-    model.add(Dropout(0.1))
-    # Hidden Layers
-    model.add(Dense(units=256, activation='relu'))
-    # Output Layer
-    model.add(Dense(units=1, activation='linear'))
+    i = Input(shape = (256,))
+    x_1 = Dense(256, activation='relu')(i)
+    x_2 = Dropout(0.1)(x_1)
+    x_3 = Dense(64, activation='relu')(x_2)
+    x_4 = Dropout(0.1)(x_3)
+    x_5 = Dense(16, activation='relu')(x_4)
+    o = Dense(1, activation='linear')(x_1)
+    model = Model(i,o)
 
     # Define the optimizer and loss function
-    model.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
+    model.compile(optimizer='adam', loss="mse", metrics=['accuracy'])
 
     # You can also define a custom loss function
     # model.compile(optimizer='adam', loss=custom_loss)
 
     # Train 
-    model.fit(X, Y, epochs=20)
+    model.fit(X, Y, epochs=15)
 
     return model
 
