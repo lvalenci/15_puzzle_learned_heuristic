@@ -81,21 +81,6 @@ tensorflow.keras.losses.exp_loss_2 = exp_loss_2
 tensorflow.keras.losses.shift_mse = shift_mse
 tensorflow.keras.losses.bounded_loss = bounded_loss
 
-# define custom metrics below
-def bound_above_and_below(i):
-    """
-    returns a function for computing loss such that it is 1 if prediction was
-    above acutal distance or below manhattan distance
-    """
-    i2 = K.eval(i)
-    board = unencode_board(i2)
-    man_dist = manhattan(board)
-
-    def loss(y_true, y_pred):
-
-        return K.abs(K.sign(y_true - y_pred) + K.sign(man_dist - y_pred)) / 2
-
-    return loss
 
 def neural_net_heuristic(board, model):
 
@@ -104,6 +89,14 @@ def neural_net_heuristic(board, model):
     the heuristic the model predicts.
     """
     [[pred]] = model.predict(one_hot_encode(board).reshape(1,256))
+    return round(pred)
+
+def neural_net_heuristic_2(board, model):
+    """
+    This function takes in a board and a trained NN model and returns
+    the heuristic the model predicts.
+    """
+    [[pred]] = model.predict(get_rep_2(board).reshape(1,288))
     return round(pred)
 
 def unencode_board(encoding):
@@ -146,6 +139,20 @@ def one_hot_encode(board):
 
     return X
 
+def calc_displacements(board):
+    """given a board, returns SIZE^2 array containing distances of tile in
+    each entry to proper location"""
+    dis_x = np.zeros(SIZE ** 2)
+    dis_y = np.zeros(SIZE ** 2)
+
+    for i in range(SIZE):
+        for j in range(SIZE):
+            curr = board[i,j]
+            (x, y) = get_proper_loc(curr)
+            dis_x[SIZE * i + j] = x-i
+            dis_y[SIZE * i + j] = y-j
+    return np.concatenate((dis_x, dis_y))
+
 def load_data(file_name):
     """
     This function reads in training data from a file and returns 
@@ -165,15 +172,36 @@ def load_data(file_name):
     file.close()
 
     return(np.asarray(X),np.asarray(Y))
+def get_rep_2(board):
+    """returns representation of one-hot encoded board with additional 16 
+    entries which encode distnaces entry in eqch square is from proper location"""
+    encode = one_hot_encode(board)
+    displacements = calc_displacements(board)
+    return np.concatenate((encode, displacements))
 
-def find_over_estimate(file_name, model_file):
+def load_data_2(file_name):
+    """same as load_data except that has additional 16 entries which
+    encode distnaces entry in eqch square is from proper location"""
+    file = open(file_name, "r")
+
+    X = []
+    Y = []
+    for line in file:
+        (board, dist) = string_to_board_and_dist(line)
+        Y.append(dist)
+        X.append(get_rep_2(board))
+
+
+    file.close()
+    return (np.asarray(X), np.asarray(Y))
+
+def find_over_estimate(file_name, model):
     """
     This function takes in a model saved in model_file and data points in 
     file_name and prints out the percentage of times said model predicted 
     a distance greater than the actual distance and the percentage of times
     said model predicted a distance less than the Manhattan Distance
     """
-    model = load_model(model_file)
     data = open(file_name, "r")
     over = []
     under = []
@@ -181,7 +209,7 @@ def find_over_estimate(file_name, model_file):
     for line in data:
         (board, dist) = string_to_board_and_dist(line)
         man_dist = manhattan(board, None)
-        pred = neural_net_heuristic(board, model)
+        pred = neural_net_heuristic_2(board, model)
         over.append(pred > dist)
         under.append(pred < man_dist)
 
@@ -242,6 +270,43 @@ def evaluate_custom_funcs(file_name, cust_loss, cust_metric):
         # Build Model
         i = Input(shape = (256,))
         x_1 = Dense(256, activation='relu')(i)
+        x_2 = Dropout(0.1)(x_1)
+        x_3 = Dense(64, activation='relu')(x_2)
+        x_4 = Dropout(0.1)(x_3)
+        x_5 = Dense(16, activation='relu')(x_4)
+        o = Dense(1, activation='linear')(x_1)
+        model = Model(i,o)
+
+        # Define the optimizer and loss function
+        # model.compile(optimizer='adam', loss=cust_loss, metrics=cust_metric(i))
+        model.compile(optimizer = 'adam', loss = cust_loss, metrics=['accuracy'])
+        # You can also define a custom loss function
+        # model.compile(optimizer='adam', loss=custom_loss)
+
+        # Train 
+        model.fit(X[train], Y[train], epochs=15)
+
+        # Evaluate
+        score = model.evaluate(X[test], Y[test], verbose=0)
+        print(score)
+
+    return model
+
+def evaluate_data_2(file_name, cust_loss, cust_metric):
+    """
+    This function reads in training data from a file and 
+    trains and evaluates NN model using kfold validation. 
+    Specifically uses custom loss function with 
+    """
+    (X,Y) = load_data_2(file_name)
+
+    # Implement K-fold cross validation
+    kfold = KFold(n_splits=5, shuffle=True, random_state=2020)
+
+    for train, test in kfold.split(X, Y):
+        # Build Model
+        i = Input(shape = (288,))
+        x_1 = Dense(288, activation='relu')(i)
         x_2 = Dropout(0.1)(x_1)
         x_3 = Dense(64, activation='relu')(x_2)
         x_4 = Dropout(0.1)(x_3)
@@ -327,6 +392,38 @@ def train_custom_loss(file_name, loss_func):
 
     return model
 
+def train_custom_loss_2(file_name, loss_func):
+    """
+    This function reads in training data from a file and returns a 
+    trained NN model.  This NN model is trained with specificed loss
+    function
+    """
+    (X,Y) = load_data_2(file_name)
+
+    # Build Model
+    model = Sequential()
+
+    # Input Layer
+    i = Input(shape = (288,))
+    x_1 = Dense(288, activation='relu')(i)
+    x_2 = Dropout(0.1)(x_1)
+    x_3 = Dense(64, activation='relu')(x_2)
+    x_4 = Dropout(0.1)(x_3)
+    x_5 = Dense(16, activation='relu')(x_4)
+    o = Dense(1, activation='linear')(x_1)
+    model = Model(i,o)
+
+    # Define the optimizer and loss function
+    model.compile(optimizer='adam', loss=loss_func, metrics=['accuracy'])
+
+    # You can also define a custom loss function
+    # model.compile(optimizer='adam', loss=custom_loss)
+
+    # Train 
+    model.fit(X, Y, epochs=15)
+
+    return model
+
 def run_saved_model(model_file, data_file):
     """
     given a file to which a model is saved a a datafile, runs model on data
@@ -350,8 +447,9 @@ if __name__ == "__main__":
     # To train on the entire data set, replace evaluate with train
     #model = evaluate(file_name)
     #model = evaluate_custom_funcs(file_name, exp_loss, None)
-    model = train_custom_funcs(file_name, shift_mse)
-    model.save(out_file)
+    model = train_custom_loss_2(file_name, exp_loss_2)
+    #model.save(out_file)
     board = gen_board()
-    print(neural_net_heuristic(board, model))
+    print(neural_net_heuristic_2(board, model))
     print(manhattan(board, None))
+    find_over_estimate(file_name, model)

@@ -85,7 +85,10 @@ if __name__ == "__main__":
     if (sys.argv[3] == 'xgboost'):
         exit()
         # TODO
-    model = nn.train("All_Data.txt")
+    print("about to train")
+    model = nn.train_custom_loss_2("All_Data.txt", nn.shift_mse)
+    print("finished training")
+    h_func = nn.neural_net_heuristic_2
     run_testing(sys.argv[1], model, h_func)
 
     
