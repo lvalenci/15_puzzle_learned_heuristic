@@ -12,7 +12,7 @@ import pickle
 import io_help as io
 import heuristic as h
 import neural_net as nn
-import xg_boost_2 as xg2
+#import xg_boost_2 as xg2
 
 
 def gen_portfolio_data(out_file, model, h_func):

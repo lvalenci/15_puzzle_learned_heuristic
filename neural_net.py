@@ -99,6 +99,14 @@ def neural_net_heuristic_2(board, model):
     [[pred]] = model.predict(get_rep_2(board).reshape(1,288))
     return round(pred)
 
+def neural_net_heuristic_3(board, model):
+    """
+    This function takes in a board and a trained NN model and returns
+    the heuristic the model predicts.
+    """
+    [[pred]] = model.predict(get_rep_3(board).reshape(1,290))
+    return round(pred)
+
 def unencode_board(encoding):
     """
     given a one-hot encoding of the board as returned by one_hot_encode,
@@ -172,6 +180,7 @@ def load_data(file_name):
     file.close()
 
     return(np.asarray(X),np.asarray(Y))
+
 def get_rep_2(board):
     """returns representation of one-hot encoded board with additional 16 
     entries which encode distnaces entry in eqch square is from proper location"""
@@ -195,6 +204,32 @@ def load_data_2(file_name):
     file.close()
     return (np.asarray(X), np.asarray(Y))
 
+def get_rep_3(board):
+    """returns representation of one-hot encoded board with additional 16 
+    entries which encode distnaces entry in eqch square is from proper location
+    also has manhattan and hamming metrics
+    """
+    encode = one_hot_encode(board)
+    displacements = calc_displacements(board)
+    man = np.asarray([manhattan(board, None), hamming(board, None)])
+
+    return np.concatenate((encode, displacements, man))
+
+def load_data_3(file_name):
+    """same as load_data except that has additional 16 entries which
+    encode distnaces entry in eqch square is from proper location"""
+    file = open(file_name, "r")
+
+    X = []
+    Y = []
+    for line in file:
+        (board, dist) = string_to_board_and_dist(line)
+        Y.append(dist)
+        X.append(get_rep_3(board))
+
+    file.close()
+    return (np.asarray(X), np.asarray(Y))
+
 def find_over_estimate(file_name, model):
     """
     This function takes in a model saved in model_file and data points in 
@@ -209,7 +244,7 @@ def find_over_estimate(file_name, model):
     for line in data:
         (board, dist) = string_to_board_and_dist(line)
         man_dist = manhattan(board, None)
-        pred = neural_net_heuristic_2(board, model)
+        pred = neural_net_heuristic_3(board, model)
         over.append(pred > dist)
         under.append(pred < man_dist)
 
@@ -406,6 +441,38 @@ def train_custom_loss_2(file_name, loss_func):
     # Input Layer
     i = Input(shape = (288,))
     x_1 = Dense(288, activation='relu')(i)
+    x_2 = Dropout(0.1)(x_1)
+    x_3 = Dense(64, activation='relu')(x_2)
+    x_4 = Dropout(0.1)(x_3)
+    x_5 = Dense(16, activation='relu')(x_4)
+    o = Dense(1, activation='linear')(x_1)
+    model = Model(i,o)
+
+    # Define the optimizer and loss function
+    model.compile(optimizer='adam', loss=loss_func, metrics=['accuracy'])
+
+    # You can also define a custom loss function
+    # model.compile(optimizer='adam', loss=custom_loss)
+
+    # Train 
+    model.fit(X, Y, epochs=15)
+
+    return model
+
+def train_custom_loss_3(file_name, loss_func):
+    """
+    This function reads in training data from a file and returns a 
+    trained NN model.  This NN model is trained with specificed loss
+    function
+    """
+    (X,Y) = load_data_3(file_name)
+
+    # Build Model
+    model = Sequential()
+
+    # Input Layer
+    i = Input(shape = (290,))
+    x_1 = Dense(290, activation='relu')(i)
     x_2 = Dropout(0.1)(x_1)
     x_3 = Dense(64, activation='relu')(x_2)
     x_4 = Dropout(0.1)(x_3)

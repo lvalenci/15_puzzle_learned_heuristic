@@ -12,6 +12,7 @@ import heuristic as h
 import io_help as io
 import neural_net as nn
 import solver as s
+import gen_portfolio_data as gpd
 
 
 def load_boards(filename):
@@ -48,6 +49,8 @@ def run_testing(data_file, model, h_func):
     cust_distance = []
 
     for i in range(len(boards)):
+        if (i % 100 == 0):
+            print(i)
         (c_states, c_time, sol_path) = s.solve(boards[i], h_func, model)
         cust_states.append(c_states)
         sol_len = len(sol_path) - 1
@@ -86,9 +89,10 @@ if __name__ == "__main__":
         exit()
         # TODO
     print("about to train")
-    model = nn.train_custom_loss_2("All_Data.txt", nn.shift_mse)
+    model = nn.train_custom_loss_3("All_Data.txt", nn.shift_mse)
     print("finished training")
-    h_func = nn.neural_net_heuristic_2
-    run_testing(sys.argv[1], model, h_func)
-
+    #nn.find_over_estimate("All_Data.txt", model)
+    h_func = nn.neural_net_heuristic_3
+    #run_testing(sys.argv[1], model, h_func)
+    gpd.gen_portfolio_data("portfolio_data_shift_mse_nn_type_3_Luka", model, h_func)
     
