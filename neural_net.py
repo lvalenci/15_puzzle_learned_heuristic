@@ -509,14 +509,19 @@ if __name__ == "__main__":
 
     file_name = sys.argv[1] 
     out_file = sys.argv[2]
+    file_name = 'All_Data.txt'
+    out_file = 'nn_shift_mse_rep_2.txt'
+    out_file2 = 'nn_shift_mse_rep_3.txt'
 
     # Toy Example Testing 
     # To train on the entire data set, replace evaluate with train
     #model = evaluate(file_name)
     #model = evaluate_custom_funcs(file_name, exp_loss, None)
-    model = train_custom_loss_2(file_name, exp_loss_2)
-    #model.save(out_file)
-    board = gen_board()
+    model = train_custom_loss_2(file_name, shift_mse)
+    model.save(out_file)
+    model2 = train_custom_loss_3(file_name, shift_mse)
+    model2.save(out_file2)
+    '''board = gen_board()
     print(neural_net_heuristic_2(board, model))
     print(manhattan(board, None))
-    find_over_estimate(file_name, model)
+    find_over_estimate(file_name, model)'''

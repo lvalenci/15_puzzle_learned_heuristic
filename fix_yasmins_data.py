@@ -6,6 +6,6 @@ if __name__ == "__main__":
     for line in file:
         split = line.split('!')
         corr = ((split[0])[1:])[:-1]
-        out.write(corr + '!' + split[1] + '\n')
+        out.write(corr + '!' + split[1])
     file.close()
     out.close()
