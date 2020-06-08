@@ -28,7 +28,7 @@ def string_to_board_and_dist(string):
     """given string output by board_and_dist_to_string, returns encoded
     board and distance, output is tuple (board, dist)"""
     split = string.split('!')
-    dist = int(split[0])
+    dist = int(float(split[0]))
     board = string_to_board(split[1])
     return (board, dist)
 
