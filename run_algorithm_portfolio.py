@@ -112,8 +112,6 @@ def one_hot_encode(board):
 def heuristic_gen(all_models, all_heuristics, alg_model):
     def portfolio_heuristic(board, trash):
         i = np.asarray(alg_model.predict(one_hot_encode(board).reshape(1,256)).flatten()).argmax()
-        if (i == 4):
-            i = 3
         pred = all_heuristics[i](board, all_models[i])
         return pred
     return portfolio_heuristic
@@ -133,11 +131,12 @@ def run_testing(data_file, alg_model):
     cust_distance = []
 
     model_0 = load_model("nn_shift_mse_rep_2.txt", compile=False)
-    model_1 = load_model("nn_shift_mse_rep_3.txt", compile=False)
-    model_2 = pickle.load(open("./XGBoost_Models/xg_model_mse_shift_fe_500", "rb"))
+    model_1 = load_model("nn_shift_mse2_complex.txt", compile=False)
+    model_2 = load_model("nn_shift_mse3_complex.txt", compile=False)
+    model_3 = pickle.load(open("./XGBoost_Models/xg_model_mse_shift_fe_500", "rb"))
 
-    all_models = [model_0, model_1, model_2, None]
-    all_heuristics = [neural_net_heuristic_2, neural_net_heuristic_3, xg2.xgboost_heuristic_2, manhattan]
+    all_models = [model_0, model_1, model_2, model_3, None]
+    all_heuristics = [neural_net_heuristic_2, neural_net_heuristic_2, neural_net_heuristic_3, xg2.xgboost_heuristic_2, manhattan]
 
     for i in range(len(boards)):
 
@@ -173,7 +172,7 @@ if __name__ == "__main__":
     keras.losses.bounded_loss = bounded_loss
 
     print("Loading algorithm model...")
-    algorithm_model = load_model("algorithm_model_50_no_do.h5")
+    algorithm_model = load_model("./Algorithm_Models/algorithm_model_50_new.h5")
 
     run_testing("Test_boards.txt", algorithm_model)
 
