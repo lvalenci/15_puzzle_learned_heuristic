@@ -9,8 +9,8 @@ import io_help as io
 
 num_points = 395715
 
-files = ["portfolio_data_shift_mse_nn_type_2_Luka.txt", "portfolio_data_shift_mse_nn_type_3_Luka.txt", \
-            "portfolio_data_xgboost_500_clean.txt", "portfolio_knn_try1.txt", "portfolio_data_manhattan.txt"]
+files = ["portfolio_data_shift_mse_nn_type_2_Luka.txt", "portfolio_data_shift_mse_nn_type_2_complex_Luka.txt", \
+            "portfolio_data_shift_mse_nn_type_3_complex_Luka.txt", "portfolio_data_xgboost_500_clean.txt", "portfolio_data_manhattan.txt"]
 # first model in nn_shift_mse2 second is in nn_shift_mse3, don't know about 3 and 4, five is simple manhattan distance
 
 if __name__ == "__main__":

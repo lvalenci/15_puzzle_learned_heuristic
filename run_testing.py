@@ -89,10 +89,12 @@ if __name__ == "__main__":
         exit()
         # TODO
     print("about to train")
-    model = nn.train_custom_loss_3("All_Data.txt", nn.shift_mse)
-    print("finished training")
+    model = nn.train_custom_loss_2("All_Data.txt", nn.shift_mse)
+    h_func = nn.neural_net_heuristic_2
+    run_testing(sys.argv[1], model, h_func)
+    #model.save('nn_shift_mse3_complex.txt')
     #nn.find_over_estimate("All_Data.txt", model)
-    h_func = nn.neural_net_heuristic_3
-    #run_testing(sys.argv[1], model, h_func)
-    gpd.gen_portfolio_data("portfolio_data_shift_mse_nn_type_3_Luka", model, h_func)
+    #print("finished training")
+    #nn.find_over_estimate("All_Data.txt", model)
+    #gpd.gen_portfolio_data("portfolio_data_shift_mse_nn_type_3_complex_Luka", model, h_func)
     

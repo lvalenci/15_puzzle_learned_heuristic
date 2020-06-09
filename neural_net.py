@@ -81,7 +81,6 @@ tensorflow.keras.losses.exp_loss_2 = exp_loss_2
 tensorflow.keras.losses.shift_mse = shift_mse
 tensorflow.keras.losses.bounded_loss = bounded_loss
 
-
 def neural_net_heuristic(board, model):
 
     """
@@ -413,7 +412,7 @@ def train_custom_loss(file_name, loss_func):
     x_3 = Dense(64, activation='relu')(x_2)
     x_4 = Dropout(0.1)(x_3)
     x_5 = Dense(16, activation='relu')(x_4)
-    o = Dense(1, activation='linear')(x_1)
+    o = Dense(1, activation='linear')(x_5)
     model = Model(i,o)
 
     # Define the optimizer and loss function
@@ -445,7 +444,7 @@ def train_custom_loss_2(file_name, loss_func):
     x_3 = Dense(64, activation='relu')(x_2)
     x_4 = Dropout(0.1)(x_3)
     x_5 = Dense(16, activation='relu')(x_4)
-    o = Dense(1, activation='linear')(x_1)
+    o = Dense(1, activation='linear')(x_5)
     model = Model(i,o)
 
     # Define the optimizer and loss function
@@ -477,7 +476,7 @@ def train_custom_loss_3(file_name, loss_func):
     x_3 = Dense(64, activation='relu')(x_2)
     x_4 = Dropout(0.1)(x_3)
     x_5 = Dense(16, activation='relu')(x_4)
-    o = Dense(1, activation='linear')(x_1)
+    o = Dense(1, activation='linear')(x_5)
     model = Model(i,o)
 
     # Define the optimizer and loss function
