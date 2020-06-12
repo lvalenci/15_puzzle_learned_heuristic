@@ -24,7 +24,7 @@ Puzzle is represented in a 4x4 np.array, 16 represents the blank tile, 1-15 repr
 - Model_Training
   - neural_net.py: contains code for training a neural net
   - xg_boost_2.py, xgboost.ipynb, xgboost_gpu.ipynb: contains code for training an xg_boost model
-KNN Models:
+KNN Models
   - knn_find_best.ipynb: contains code for training and testing a KNN Classifier with various parameters.
   - knn_final.ipynb: contains code for training and testing best performing KNN Classifier.
   - board_rep_4_final.ipynb: contains code for training and testing neural net with features generated using final KNN.
