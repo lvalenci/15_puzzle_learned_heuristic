@@ -27,7 +27,7 @@ Puzzle is represented in a 4x4 np.array, 16 represents the blank tile, 1-15 repr
 - KNN Models
   - knn_find_best.ipynb: contains code for training and testing KNN Classifiers with various parameters.
   - knn_final.ipynb: contains code for training and testing best performing KNN Classifier.
-  - board_rep_4_final.ipynb: contains code for training and testing neural net with features generated using final KNN.
+  - board_rep_4.ipynb: contains code for training and testing neural net with features generated using final KNN.
 - Testing
   - run_algorithm_portfolio.py: runs testing for an algorithm portfolio
   - run_testing_nn.py: runs testing on a neural net model
