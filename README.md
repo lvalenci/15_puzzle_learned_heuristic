@@ -3,9 +3,6 @@
 # 15-puzzle representation
 Puzzle is represented in a 4x4 np.array, 16 represents the blank tile, 1-15 represent the corresponding tiles
 
-# File Contains:
-- gen_train_data.py: module for generating training data. See module itself for how to run it   
-
 # Folders
 - A_Star 
   - constants.py: contains constants for different modules 
