@@ -13,6 +13,3 @@ Puzzle is represented in a 4x4 np.array, 16 represents the blank tile, 1-15 repr
 - xg_boost.py: cotains code for training an xg_boost model
 
 # Folders
-- XGBoost Models
-  - model_1
-
